@@ -16,19 +16,28 @@ def generate_uuid():
     return str(uuid.uuid4())
 
 
-def add_xray_config(email , user_uuid):
+def add_xray_config(email, user_uuid):
 
     path = "/etc/xray/config.json"
 
-    with open(path , "r") as f:
-        config = json.dump(f)
+    with open(path, "r") as f:
+        config = json.load(f)
+
 
     clients = config["inbounds"][0]["settings"]["clients"]
+
 
     clients.append({
         "id": user_uuid,
         "email": email
     })
+
+
+    with open(path, "w") as f:
+        json.dump(config, f, indent=4)
+
+
+    os.system("systemctl restart xray")
 
 def generate_user(username , server , port):
 
