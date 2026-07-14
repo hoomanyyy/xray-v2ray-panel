@@ -6,8 +6,7 @@ load_dotenv()
 
 
 def connection():
-
-    con = pymysql.connect(
+    return pymysql.connect(
         host=os.getenv("DB_HOST"),
         user=os.getenv("DB_USER"),
         password=os.getenv("DB_PASSWORD"),
@@ -16,85 +15,95 @@ def connection():
         cursorclass=pymysql.cursors.DictCursor
     )
 
-    print(
-    os.getenv("DB_USER"),
-    repr(os.getenv("DB_PASSWORD"))
-)
-
-    return con
-
-
 
 def save_user(name, uuid, vless_link, server, port):
-
     con = connection()
+    cur = con.cursor()
 
-    cursor = con.cursor()
+    cur.execute(
+        """
+        INSERT INTO users
+        (username, uuid, vless_link, server, port)
+        VALUES (%s,%s,%s,%s,%s)
+        """,
+        (name, uuid, vless_link, server, port)
+    )
 
-    query = """
-    INSERT INTO users
-    (`username`, `uuid`, `vless_link`, `server`, `port`)
-    VALUES (%s, %s, %s, %s, %s)
-    """
+    con.commit()
+    cur.close()
+    con.close()
 
-    cursor.execute(
-        query,
+
+def getUsers():
+    con = connection()
+    cur = con.cursor()
+
+    cur.execute("SELECT * FROM users")
+
+    users = cur.fetchall()
+
+    cur.close()
+    con.close()
+
+    return users
+
+
+def deleteUser(user_id):
+    con = connection()
+    cur = con.cursor()
+
+    cur.execute(
+        "DELETE FROM users WHERE id=%s",
+        (user_id,)
+    )
+
+    con.commit()
+
+    cur.close()
+    con.close()
+
+    return {"Message": True}
+
+
+def addInboundToDatabase(
+    remark,
+    protocol,
+    network,
+    port
+):
+    con = connection()
+    cur = con.cursor()
+
+    cur.execute(
+        """
+        INSERT INTO inbounds
+        (remark,protocol,network,port)
+        VALUES (%s,%s,%s,%s)
+        """,
         (
-            name,
-            uuid,
-            vless_link,
-            server,
+            remark,
+            protocol,
+            network,
             port
         )
     )
 
     con.commit()
 
-    cursor.close()
+    cur.close()
     con.close()
-    
-
-    print("user saved")
 
 
-def getUsers():
+def getInboundsFromDatabase():
 
     con = connection()
+    cur = con.cursor()
 
-    cursor = con.cursor()
+    cur.execute("SELECT * FROM inbounds")
 
-    query = "SELECT * FROM users"
+    rows = cur.fetchall()
 
-    cursor.execute(query)
-
-    users = cursor.fetchall()
-
-    cursor.close()
+    cur.close()
     con.close()
 
-    print(f"users: {users}")
-
-    return users
-
-
-def deleteUser(user_id):
-
-    con = connection()
-
-    cursor = con.cursor()
-
-    query = "DELETE FROM users WHERE id = %s"
-
-    cursor.execute(
-        query,
-        (user_id,)
-    )
-
-    con.commit()
-
-    cursor.close()
-    con.close()
-
-    return {
-        "Message": True
-    }
+    return rows

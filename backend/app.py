@@ -1,14 +1,21 @@
 from fastapi import FastAPI
-from cores.xray import generate_user
-from database.mysql import save_user
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
-from database.mysql import getUsers
-from database.mysql import deleteUser
 
+from cores.xray import (
+    generate_user,
+    addInboundToXray
+)
+
+from database.mysql import (
+    save_user,
+    getUsers,
+    deleteUser,
+    addInboundToDatabase,
+    getInboundsFromDatabase
+)
 
 app = FastAPI()
-
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,23 +25,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.post("/api/createUser")
 def create_user(data: dict):
 
-    username = data["username"]
-    server = data["server"]
-    port = data["port"]
-
-
     user = generate_user(
-        username,
-        server,
-        port
+        username=data["username"],
+        server=data["server"],
+        port=data["port"]
     )
-
-
-    print(user)
-
 
     save_user(
         user["username"],
@@ -44,38 +43,62 @@ def create_user(data: dict):
         user["port"]
     )
 
-
     return {
-        "user": user,
-        "Message": True
+        "Message": True,
+        "user": user
     }
 
 
 @app.post("/api/getUsers")
-def getUsersData():
-    
-    users = getUsers()
+def get_users():
 
     return {
         "Message": True,
-        "users": users
+        "users": getUsers()
     }
 
 
 @app.post("/api/deleteUser")
-def deleteUserFromDb(data: dict):
+def delete_user(data: dict):
 
-    id = data["user_id"]
+    return deleteUser(data["user_id"])
 
-    result = deleteUser(id)
 
-    return result
+@app.post("/api/addInbound")
+def add_inbound(data: dict):
+
+    addInboundToXray(
+        protocol=data["protocol"],
+        port=int(data["port"]),
+        network=data["network"],
+        security=data.get("security", "reality"),
+        tag=data["remark"]
+    )
+
+    addInboundToDatabase(
+        remark=data["remark"],
+        protocol=data["protocol"],
+        network=data["network"],
+        port=int(data["port"])
+    )
+
+    return {
+        "Message": True
+    }
+
+
+@app.post("/api/getInbounds")
+def get_inbounds():
+
+    return {
+        "Message": True,
+        "inbounds": getInboundsFromDatabase()
+    }
 
 
 if __name__ == "__main__":
-
     uvicorn.run(
         app,
         host="0.0.0.0",
-        port=8000,
+        port=8000
     )

@@ -1,93 +1,150 @@
-import React, {useState} from "react";
-import "./Users.css";
+import React from "react";
 import { FaCopy, FaTrash } from "react-icons/fa";
 
-
-const Users = ({username, uuid, vless_link , id , usersDeleteOnPress}) => {
-
-
-    const [active, setActive] = useState(true);
+import "./Users.css";
 
 
+function Users({
 
-    function copyConfig(){
+id,
+username,
+uuid,
+vless_link,
 
-        navigator.clipboard.writeText(vless_link);
+onDelete
 
-    }
-
-
-
-    return (
-
-        <div className="user-card shadow-lg d-flex align-items-center justify-content-between">
+}){
 
 
-            <div className="d-flex align-items-center gap-3">
+const copyConfig=()=>{
 
+navigator.clipboard.writeText(vless_link);
 
-                <h4 className="m-0">
-                    {username}
-                </h4>
+alert("Config copied");
 
-
-
-                <small className={active ? "active" : "disabled"}>
-
-                    {
-                        active 
-                        ? "Active" 
-                        : "Disabled"
-                    }
-
-                </small>
-
-
-            </div>
+};
 
 
 
 
+return(
 
-            <div className="d-flex align-items-center gap-3">
 
-
-                <p className="uuid m-0">
-                    {uuid}
-                </p>
+<div className="user-row">
 
 
 
-                <button
-                className="copy"
-                onClick={copyConfig}
-                >
-
-                    <FaCopy />
-
-                </button>
+<div className="user-info">
 
 
 
-                <button
-                className="delete"
-                onClick={() => usersDeleteOnPress(id)}
-                >
+<div className="avatar">
 
-                    <FaTrash />
+👤
 
-                </button>
-
-
-            </div>
+</div>
 
 
 
-        </div>
 
-    )
+<div>
+
+
+<h5>
+{username}
+</h5>
+
+
+<span>
+{uuid}
+</span>
+
+
+</div>
+
+
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<div className="user-actions">
+
+
+
+
+
+<span className="badge">
+
+Active
+
+</span>
+
+
+
+
+
+
+<button
+
+className="icon copy"
+
+onClick={copyConfig}
+
+>
+
+<FaCopy/>
+
+</button>
+
+
+
+
+
+
+
+
+<button
+
+className="icon delete"
+
+onClick={()=>onDelete(id)}
+
+>
+
+<FaTrash/>
+
+</button>
+
+
+
+
+
+
+
+</div>
+
+
+
+
+
+
+</div>
+
+
+
+);
+
 
 }
+
 
 
 export default Users;

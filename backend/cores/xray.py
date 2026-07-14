@@ -1,71 +1,253 @@
 import uuid
 import urllib.parse
 import os
-from dotenv import load_dotenv
 import json
+import subprocess
 
-
-load_dotenv()
-
-PUBLIC_KEY = os.getenv("PUBLIC_KEY")
-SHORT_ID = os.getenv("SHORT_ID")
-SNI = os.getenv("SNI")
+XRAY_CONFIG = "/etc/xray/config.json"
 
 
 def generate_uuid():
     return str(uuid.uuid4())
 
 
-def add_xray_config(email, user_uuid):
 
-    path = "/etc/xray/config.json"
+def restart_xray():
+    os.system("systemctl restart xray")
 
-    with open(path, "r") as f:
+
+
+def get_reality_config():
+
+    with open(XRAY_CONFIG,"r") as f:
         config = json.load(f)
 
 
-    clients = config["inbounds"][0]["settings"]["clients"]
+    for inbound in config.get("inbounds",[]):
+
+        stream = inbound.get("streamSettings",{})
 
 
-    clients.append({
-        "id": user_uuid,
-        "email": email
-    })
+        if stream.get("security") == "reality":
 
 
-    with open(path, "w") as f:
-        json.dump(config, f, indent=4)
+            reality = stream.get(
+                "realitySettings",
+                {}
+            )
 
 
-    os.system("systemctl restart xray")
+            private_key = reality.get(
+                "privateKey"
+            )
 
-def generate_user(username , server , port):
+
+            if not private_key:
+                continue
+
+
+
+            short_ids = reality.get(
+                "shortIds",
+                []
+            )
+
+
+            server_names = reality.get(
+                "serverNames",
+                []
+            )
+
+
+
+            # ساخت public key از private key
+
+            result = subprocess.check_output(
+                [
+                    "xray",
+                    "x25519",
+                    "-i",
+                    private_key
+                ],
+                text=True
+            )
+
+
+            public_key = None
+
+
+            for line in result.splitlines():
+
+                if "Public key:" in line:
+
+                    public_key = (
+                        line
+                        .split(":")[1]
+                        .strip()
+                    )
+
+
+
+            return {
+
+                "public_key":public_key,
+
+                "short_id":
+                    short_ids[0]
+                    if short_ids
+                    else "",
+
+
+                "sni":
+                    server_names[0]
+                    if server_names
+                    else "www.cloudflare.com",
+
+
+                "port":
+                    inbound.get("port")
+
+            }
+
+
+
+    return None
+
+
+
+
+
+def add_xray_config(email,user_uuid):
+
+
+    with open(XRAY_CONFIG,"r") as f:
+        config=json.load(f)
+
+
+
+    for inbound in config["inbounds"]:
+
+
+        if inbound["streamSettings"].get("security")=="reality":
+
+
+            clients = (
+                inbound
+                .setdefault(
+                    "settings",
+                    {}
+                )
+                .setdefault(
+                    "clients",
+                    []
+                )
+            )
+
+
+            clients.append({
+
+                "id":user_uuid,
+
+                "email":email
+
+            })
+
+
+            break
+
+
+
+
+    with open(XRAY_CONFIG,"w") as f:
+
+        json.dump(
+            config,
+            f,
+            indent=4
+        )
+
+
+    restart_xray()
+
+
+
+
+
+
+
+def generate_user(
+    username,
+    server,
+    port
+):
+
 
     user_uuid = generate_uuid()
 
-    remark = urllib.parse.quote(username)
 
-    vless_link = (
-        f"vless://{user_uuid}@{server}:{port}"
-        f"?type=tcp"
-        f"&security=reality"
-        f"&encryption=none"
-        f"&pbk={PUBLIC_KEY}"
-        f"&fp=chrome"
-        f"&sni={SNI}"
-        f"&sid={SHORT_ID}"
-        f"&spx=%2F"
-        f"#{remark}"
+
+    reality = get_reality_config()
+
+
+
+    if not reality:
+
+        raise Exception(
+            "Reality inbound not found"
+        )
+
+
+
+
+    remark = urllib.parse.quote(
+        username
     )
 
-    add_xray_config(username , user_uuid)
 
-    print("vless_link:", vless_link)
+
+    link=(
+
+        f"vless://{user_uuid}@{server}:{port}"
+
+        f"?type=tcp"
+
+        f"&security=reality"
+
+        f"&encryption=none"
+
+        f"&pbk={reality['public_key']}"
+
+        f"&fp=chrome"
+
+        f"&sni={reality['sni']}"
+
+        f"&sid={reality['short_id']}"
+
+        f"#{remark}"
+
+    )
+
+
+
+
+    add_xray_config(
+        username,
+        user_uuid
+    )
+
+
 
     return {
-        "username": username,
-        "uuid": user_uuid,
-        "vless_link": vless_link,
-        "server": server,
-        "port": port,
+
+
+        "username":username,
+
+        "uuid":user_uuid,
+
+        "vless_link":link,
+
+        "server":server,
+
+        "port":port
+
     }

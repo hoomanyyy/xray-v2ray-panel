@@ -1,44 +1,77 @@
-html,
-body,
-#root,
-.App {
+*{
 
-  width:100%;
-  height:100%;
+box-sizing:border-box;
 
 }
 
-.input{
-  border-radius: 7px;
-  padding: 4px;
-  outline: none;
-  border: solid rgb(255, 255, 255) 1px;
-  background-color: #181435;
-  color: white;
-  padding-left: 13px;
-  padding-top: 9px;
-  padding-bottom: 9px;
-}
 
-.input:focus{
-  border: solid rgb(60, 82, 230) 1px;
-  outline: none;
-}
+body{
 
-.App {
+margin:0;
 
-  background-color:#110b32;
+font-family:Arial,sans-serif;
+
+background:#071a3d;
+
+color:white;
 
 }
-.justify-content-between{
-  border-bottom: solid #2a2645 1px;
+
+
+
+#root{
+
+height:100vh;
+
 }
-.shadow-lg{
-  border: solid #2a2645 1px;
-  transition: 0.3s  ;
+
+
+
+.panel{
+
+display:flex;
+
+height:100vh;
+
+background:#071a3d;
+
 }
-.shadow-lg:hover{
-  cursor: pointer;
-  transform: translateY(4px)
+
+
+
+.content{
+
+flex:1;
+
+overflow-y:auto;
+
+padding:30px;
+
+background:#071a3d;
+
+}
+
+
+
+
+::-webkit-scrollbar{
+
+width:8px;
+
+}
+
+
+::-webkit-scrollbar-thumb{
+
+background:#0066ff;
+
+border-radius:20px;
+
+}
+
+
+::-webkit-scrollbar-track{
+
+background:#04142f;
 
 }
