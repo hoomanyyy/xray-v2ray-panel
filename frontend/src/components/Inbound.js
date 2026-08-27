@@ -1,10 +1,9 @@
 import React, {useEffect, useState} from "react";
 import axios from "axios";
 
+import API from "../config";
 import "./Inbound.css";
 
-
-const API = "http://localhost:8000/api";
 
 
 
