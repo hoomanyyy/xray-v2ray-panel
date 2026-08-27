@@ -1,6 +1,6 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import API from "./config";
 import {useEffect, useState} from "react";
 import axios from "axios";
 
@@ -14,11 +14,6 @@ Route
 import Sidebar from "./components/Sidebar";
 import Clients from "./components/Clients";
 import Inbound from "./components/Inbound";
-
-
-const API = "http://localhost:8000/api";
-
-
 
 function App(){
 
